@@ -302,8 +302,11 @@ export default function App() {
   const [detected, setDetected] = React.useState(false);
   const inputTextArea = React.useRef(null);
   const [savedTranslations, setSavedTranslations] = React.useState([]);
-  const [rtlText, setRTLText] = React.useState({});
-  const [rtlView, setRTLView] = React.useState({});
+
+  const [rtlTextInput, setRTLTextInput] = React.useState({});
+  const [rtlViewInput, setRTLViewInput] = React.useState({});
+  const [rtlTextOutput, setRTLTextOutput] = React.useState({});
+  const [rtlViewOutput, setRTLViewOutput] = React.useState({});
 
   const speak = (text, language) => {
     Speech.speak(text, {
@@ -338,16 +341,20 @@ export default function App() {
 
   const switchLanguages = () => {
     if (inputLanguage[1] != "auto") {
-      const input = inputLanguage;
-      const output = outputLanguage;
-      const inputValue = value;
-      const outputArray = data;
+      var input = inputLanguage;
+      var output = outputLanguage;
+      var inputValue = value;
+      var outputArray = data;
 
-      onChangeText(outputArray.output.replaceAll("(*n*)", "\n"));
-      setData(outputArray);
+      if (outputArray) {
+        outputArray.output = inputValue;
+        onChangeText(
+          outputArray ? outputArray.output.replaceAll("(*n*)", "\n") : ""
+        );
+        setData(outputArray);
+      }
+
       setDetected(false);
-
-      outputArray.output = inputValue;
 
       onInputLanguage(output);
       onOutputLanguage(input);
@@ -393,18 +400,27 @@ export default function App() {
     I18nManager.forceRTL(false);
     I18nManager.allowRTL(true);
 
-    const rtlText =
-      inputLanguage.length == 3 ||
-      (outputLanguage.length == 3 && {
-        textAlign: "right",
-        writingDirection: "rtl",
-      });
-    const rtlView =
-      inputLanguage.length == 3 ||
-      (outputLanguage.length == 3 && { flexDirection: "row-reverse" });
+    const rtlTextInput = inputLanguage.length == 3 && {
+      textAlign: "right",
+      writingDirection: "rtl",
+    };
+    const rtlViewInput = inputLanguage.length == 3 && {
+      flexDirection: "row-reverse",
+    };
 
-    setRTLText(rtlText);
-    setRTLView(rtlView);
+    const rtlTextOutput = outputLanguage.length == 3 && {
+      textAlign: "right",
+      writingDirection: "rtl",
+    };
+    const rtlViewOutput = outputLanguage.length == 3 && {
+      flexDirection: "row-reverse",
+    };
+
+    setRTLTextInput(rtlTextInput);
+    setRTLViewInput(rtlViewInput);
+
+    setRTLTextOutput(rtlTextOutput);
+    setRTLViewOutput(rtlViewOutput);
 
     const delayDebounceFn = setTimeout(() => {
       if (value.trim().length > 0) {
@@ -447,7 +463,7 @@ export default function App() {
 
   return (
     <View
-      style={[styles.container, { backgroundColor: "white" }, rtlView, rtlText]}
+      style={[styles.container, { backgroundColor: "white" }]}
       onPress={() => setModalVisible(false)}
     >
       <View style={{ backgroundColor: "#f3f3f3", height: "100%" }}>
@@ -678,13 +694,11 @@ export default function App() {
                 onChangeText(text);
               }}
               value={value}
-              style={[styles.textInput, rtlText, rtlView]}
+              style={[styles.textInput, rtlTextInput, rtlViewInput]}
               placeholder="Type to translate..."
             />
-            <View
-              style={[styles.translateBadge, { paddingBottom: 10, flex: 1 }]}
-            >
-              <View style={[styles.flexOptionsBlockSpace, rtlView]}>
+            <View style={[styles.translateBadge, { paddingBottom: 10 }]}>
+              <View style={[styles.flexOptionsBlockSpace]}>
                 <View style={{ width: "80%" }}>
                   {transliterate(value).trim().length > 0 && (
                     <Text
@@ -697,7 +711,6 @@ export default function App() {
                           marginTop: 0,
                           paddingTop: 0,
                         },
-                        rtlText,
                       ]}
                     >
                       Pronunciation:{" "}
@@ -761,7 +774,13 @@ export default function App() {
               style={[styles.translatedBlock, { paddingRight: 20, flex: 1 }]}
             >
               <View style={[styles.translatedText]}>
-                <View style={[styles.flexOptionsBlockSpace, rtlView, rtlText]}>
+                <View
+                  style={[
+                    styles.flexOptionsBlockSpace,
+                    rtlViewOutput,
+                    rtlTextOutput,
+                  ]}
+                >
                   <Text style={styles.translatedTextLabelWhite}>
                     {outputLanguage[0]}
                   </Text>
@@ -806,8 +825,8 @@ export default function App() {
                   style={[
                     styles.translatedTextLabel,
                     { fontWeight: "500" },
-                    rtlView,
-                    rtlText,
+                    rtlViewOutput,
+                    rtlTextOutput,
                   ]}
                 >
                   {loading
@@ -818,8 +837,8 @@ export default function App() {
                   <Text
                     style={[
                       styles.transliterateText,
-                      rtlView,
-                      rtlText,
+                      rtlViewOutput,
+                      rtlTextOutput,
                       {
                         margin: 0,
                         color: "white",
@@ -834,7 +853,13 @@ export default function App() {
                 )}
               </View>
               {!loading && (
-                <View style={[styles.flexOptionsBlock, rtlView, rtlText]}>
+                <View
+                  style={[
+                    styles.flexOptionsBlock,
+                    rtlViewOutput,
+                    rtlTextOutput,
+                  ]}
+                >
                   <View style={[styles.translateGroupRight]}>
                     <TouchableOpacity
                       onPress={() =>
@@ -993,7 +1018,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    height: "100%",
   },
   textInput: {
     padding: 5,
