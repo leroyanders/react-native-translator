@@ -889,7 +889,7 @@ export default function App() {
                 return (
                   <View key={item[0]} style={styles.savedTranslations}>
                     <View style={[styles.flexOptionsBlock]}>
-                      <View style={{ alignSelf: "center" }}>
+                      <View style={{ alignSelf: "center", width: "80%" }}>
                         <Text
                           style={[
                             styles.savedTranslationsText,
@@ -914,7 +914,7 @@ export default function App() {
                           <Text
                             style={[
                               styles.savedTranslationsText,
-                              { fontSize: 14 },
+                              { fontSize: 14, marginTop: 10 },
                             ]}
                           >
                             {item[1].output.text}
@@ -928,41 +928,43 @@ export default function App() {
                         ]}
                       >
                         <View style={styles.translateGroupRight}>
-                          <TouchableOpacity
-                            style={[
-                              styles.speechButtonFilled,
-                              {
-                                opacity: 1,
-                                marginRight: 15,
-                                backgroundColor: "#f3f3f3",
-                              },
-                            ]}
-                            onPress={() =>
-                              removeStoreData(item[0]).then(() => {
-                                AsyncStorage.getAllKeys().then((keys) =>
-                                  AsyncStorage.multiGet(keys).then((data) => {
-                                    var jsonData = [];
+                          <View>
+                            <TouchableOpacity
+                              style={[
+                                styles.speechButtonFilled,
+                                {
+                                  opacity: 1,
+                                  marginRight: 15,
+                                  backgroundColor: "#f3f3f3",
+                                },
+                              ]}
+                              onPress={() =>
+                                removeStoreData(item[0]).then(() => {
+                                  AsyncStorage.getAllKeys().then((keys) =>
+                                    AsyncStorage.multiGet(keys).then((data) => {
+                                      var jsonData = [];
 
-                                    data.map((item) => {
-                                      jsonData.push([
-                                        item[0],
-                                        JSON.parse(item[1]),
-                                      ]);
-                                    });
+                                      data.map((item) => {
+                                        jsonData.push([
+                                          item[0],
+                                          JSON.parse(item[1]),
+                                        ]);
+                                      });
 
-                                    setSavedTranslations(jsonData);
-                                    return savedTranslations;
-                                  })
-                                );
-                              })
-                            }
-                          >
-                            <Ionicons
-                              name="cloud-offline-outline"
-                              size={20}
-                              color="grey"
-                            />
-                          </TouchableOpacity>
+                                      setSavedTranslations(jsonData);
+                                      return savedTranslations;
+                                    })
+                                  );
+                                })
+                              }
+                            >
+                              <Ionicons
+                                name="cloud-offline-outline"
+                                size={20}
+                                color="grey"
+                              />
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       </View>
                     </View>
