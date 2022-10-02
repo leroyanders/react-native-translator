@@ -25,17 +25,17 @@ git clone https://github.com/leroywagner/react-native-translator.git
 **Install dependencies**
 
 ```
-npm install
+npm install && npm i -g expo-cli
 ```
 
 **Start development**
 
 ```
-npm run ios
+expo run:ios
 ```
 
 ```
-npm run android
+expo run:android
 ```
 
 <br/>
