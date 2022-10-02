@@ -12,6 +12,8 @@ import {
   Modal,
   Alert,
   Share,
+  Platform,
+  Keyboard
 } from "react-native";
 import * as Speech from "expo-speech";
 import * as Clipboard from "expo-clipboard";
@@ -307,6 +309,27 @@ export default function App() {
   const [rtlViewInput, setRTLViewInput] = React.useState({});
   const [rtlTextOutput, setRTLTextOutput] = React.useState({});
   const [rtlViewOutput, setRTLViewOutput] = React.useState({});
+  const [isKeyboardVisible, setKeyboardVisible] = React.useState(false);
+
+  React.useEffect(() => {
+      const keyboardDidShowListener = Keyboard.addListener(
+          'keyboardDidShow',
+          () => {
+              setKeyboardVisible(true);
+          },
+      );
+      const keyboardDidHideListener = Keyboard.addListener(
+          'keyboardDidHide',
+          () => {
+              setKeyboardVisible(false);
+          },
+      );
+
+      return () => {
+          keyboardDidHideListener.remove();
+          keyboardDidShowListener.remove();
+      };
+  }, []);
 
   const speak = (text, language) => {
     Speech.speak(text, {
@@ -349,7 +372,7 @@ export default function App() {
       if (outputArray) {
         outputArray.output = inputValue;
         onChangeText(
-          outputArray ? outputArray.output.replaceAll("(*n*)", "\n") : ""
+          outputArray ? (Platform.OS === 'ios'? outputArray.output.replaceAll("(*n*)", "\n") : outputArray.output.replace('(*n*)', '\n')) : ""
         );
         setData(outputArray);
       }
@@ -436,7 +459,7 @@ export default function App() {
           },
           body: `{"lang":"${inputLanguage[1]}","dest":"${
             outputLanguage[1]
-          }","text":"${value.replaceAll("\n", "(*n*)")}"}`,
+          }","text":"${Platform.OS === 'ios'? value.replaceAll("\n", "(*n*)") : value.replace('\n', '(*n*)')}"}`,
         };
         fetch(url, options)
           .then((res) => res.json())
@@ -497,12 +520,14 @@ export default function App() {
             <View style={[styles.modalView, { flex: 1 }]}>
               <View style={[styles.flexOptionsBlockSpace, { padding: 15 }]}>
                 <Text style={styles.modalTitle}>Translate from:</Text>
-                <TouchableOpacity
-                  style={[styles.replaceButton]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Ionicons name="close-outline" size={25} color="white" />
-                </TouchableOpacity>
+                <View>
+                  <TouchableOpacity
+                    style={[styles.replaceButton]}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Ionicons name="close-outline" size={25} color="white" />
+                  </TouchableOpacity>
+                </View>
               </View>
               <View
                 style={[
@@ -511,22 +536,26 @@ export default function App() {
                   { padding: 10, justifyContent: "flex-start" },
                 ]}
               >
-                <Ionicons
-                  name="search-outline"
-                  size={20}
-                  color="#374CF4"
-                  style={{ padding: 5 }}
-                />
-                <View style={styles.flexFullWidth}>
-                  <TextInput
-                    placeholder="Search..."
-                    value={search}
-                    onChangeText={(t) => onSearchTextChange(t)}
-                    style={[styles.modalInput, { padding: 10 }]}
+                <View>
+                  <Ionicons
+                    name="search-outline"
+                    size={20}
+                    color="#374CF4"
+                    style={{ padding: 5 }}
                   />
                 </View>
+                <View style={styles.flexFullWidth}>
+                  <View>
+                    <TextInput
+                      placeholder="Search..."
+                      value={search}
+                      onChangeText={(t) => onSearchTextChange(t)}
+                      style={[styles.modalInput, { padding: 10 }]}
+                    />
+                  </View>
+                </View>
               </View>
-              <ScrollView style={{ height: "80%" }}>
+              <ScrollView style={!isKeyboardVisible? Platform.OS === 'ios'? { height: "80%" } : { height: "70%" } : { height: "50%" }}>
                 {languages
                   .filter((item) => new RegExp(search).test(item[0]))
                   .map((language) => {
@@ -574,12 +603,14 @@ export default function App() {
             <View style={[styles.modalView, { flex: 1 }]}>
               <View style={[styles.flexOptionsBlockSpace, { padding: 15 }]}>
                 <Text style={styles.modalTitle}>Translate to:</Text>
-                <TouchableOpacity
-                  style={[styles.replaceButton]}
-                  onPress={() => setModalVisible2(false)}
-                >
-                  <Ionicons name="close-outline" size={25} color="white" />
-                </TouchableOpacity>
+                <View>
+                  <TouchableOpacity
+                    style={[styles.replaceButton]}
+                    onPress={() => setModalVisible2(false)}
+                  >
+                    <Ionicons name="close-outline" size={25} color="white" />
+                  </TouchableOpacity>
+                </View>
               </View>
               <View
                 style={[
@@ -603,7 +634,7 @@ export default function App() {
                   />
                 </View>
               </View>
-              <ScrollView style={{ height: "80%" }}>
+              <ScrollView style={!isKeyboardVisible? Platform.OS === 'ios'? { height: "80%" } : { height: "70%" } : { height: "50%" }}>
                 {languages
                   .filter((item) => new RegExp(search).test(item[0]))
                   .map((language) => {
@@ -714,7 +745,7 @@ export default function App() {
                       ]}
                     >
                       Pronunciation:{" "}
-                      {transliterate(value.replaceAll("\n", " ↵ "))}
+                      {transliterate(Platform.OS === 'ios'? value.replaceAll("\n", " ↵ ") : value.replace('\n', ' ↵ '))}
                     </Text>
                   )}
                 </View>
@@ -794,7 +825,7 @@ export default function App() {
                           },
                           output: {
                             language: outputLanguage,
-                            text: data.output.replaceAll("(*n*)", "\n"),
+                            text: Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"),
                           },
                         };
                         storeData(
@@ -831,7 +862,7 @@ export default function App() {
                 >
                   {loading
                     ? "Translation..."
-                    : data && data.output.replaceAll("(*n*)", "\n")}
+                    : data && (Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"))}
                 </Text>
                 {!loading && transliterate(value).trim().length > 0 && (
                   <Text
@@ -848,7 +879,7 @@ export default function App() {
                     ]}
                   >
                     Pronunciation:{" "}
-                    {transliterate(data.output.replaceAll("(*n*)", " ↵ "))}
+                    {transliterate(Platform.OS === 'ios'? data.output.replaceAll("(*n*)", " ↵ ") : data.output.replace("(*n*)", " ↵ "))}
                   </Text>
                 )}
               </View>
@@ -864,7 +895,7 @@ export default function App() {
                     <TouchableOpacity
                       onPress={() =>
                         copyToClipboard(
-                          data.output.replaceAll("(*n*)", "\n")
+                          Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n")
                         ).then(() => Alert.alert("Copied to clipboard."))
                       }
                       style={[
@@ -878,7 +909,7 @@ export default function App() {
                   <View style={styles.translateGroupRight}>
                     <TouchableOpacity
                       onPress={() =>
-                        onShare(data.output.replaceAll("(*n*)", "\n"))
+                        onShare(Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"))
                       }
                       style={[
                         styles.speechButton,
@@ -893,7 +924,7 @@ export default function App() {
                       style={[styles.speechButton]}
                       onPress={() =>
                         speak(
-                          data.output.replaceAll("(*n*)", "\n"),
+                          Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"),
                           outputLanguage[1]
                         )
                       }
@@ -1133,7 +1164,7 @@ const styles = StyleSheet.create({
   },
   translatedBlock: {
     backgroundColor: "#374CF4",
-    shadowColor: "#000",
+    shadowColor: Platform.OS === 'ios'? "#000" : "transparent",
     shadowOffset: {
       width: 0,
       height: 5,
@@ -1161,7 +1192,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 0,
-    marginTop: 75,
+    marginTop: Platform.OS === 'ios'? 75 : 0,
     backgroundColor: "white",
     borderRadius: 20,
     height: "90%",
@@ -1189,17 +1220,17 @@ const styles = StyleSheet.create({
     marginTop: 0,
     borderTopWidth: 0,
     padding: 15,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: "#000",
+    borderBottomLeftRadius: Platform.OS === 'ios'? 30 : 0,
+    borderBottomRightRadius: Platform.OS === 'ios'? 30 : 0,
+    shadowColor: Platform.OS === 'ios'? "#000" : "transparent",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 2.1,
     shadowRadius: 1.41,
 
-    elevation: 2,
+    elevation: 1,
   },
   transliterateText: {
     margin: 10,
@@ -1243,7 +1274,7 @@ const styles = StyleSheet.create({
   },
   savedTranslationsText: {
     color: "grey",
-    borderTopWidth: 1,
+    borderTopWidth: Platform.OS === 'ios'? 1 : 0,
     borderTopColor: "#e5e5e5",
   },
   savedTranslationsLabel: {
