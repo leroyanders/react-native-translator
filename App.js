@@ -1,5 +1,9 @@
+import Voice from '@react-native-voice/voice';
 import React from "react";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AnimatedWave from "react-native-animated-wave";
+
 import { Appbar } from "react-native-paper";
 import {
   StyleSheet,
@@ -13,7 +17,7 @@ import {
   Alert,
   Share,
   Platform,
-  Keyboard,
+  Keyboard
 } from "react-native";
 import * as Speech from "expo-speech";
 import * as Clipboard from "expo-clipboard";
@@ -317,6 +321,7 @@ export default function App() {
   const [rtlTextOutput, setRTLTextOutput] = React.useState({});
   const [rtlViewOutput, setRTLViewOutput] = React.useState({});
   const [isKeyboardVisible, setKeyboardVisible] = React.useState(false);
+  const [isSpeechRecognitionEnabled, setSpeechRecognitionEnabled] = React.useState(false);
 
   React.useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -404,6 +409,33 @@ export default function App() {
     }
   };
 
+  const startVoiceInput = () => {
+
+    const speechStart = () => {
+      setSpeechRecognitionEnabled(true); 
+    }
+
+    const speechEnd = () => {
+      setSpeechRecognitionEnabled(false); 
+    }
+
+    const getVoiceResponse = (res) => {
+      onChangeText(res?.value && res?.value.join(' '));
+    }
+
+    Voice.onSpeechStart = speechStart;
+    Voice.onSpeechEnd = speechEnd;
+    Voice.onSpeechResults = getVoiceResponse
+
+    // start listening for voice
+    Voice.start(inputLanguage[1] === 'auto'? 'en' : inputLanguage[1]);
+  }
+
+  const stopVoiceInput = () => {
+    Voice.stop();
+    setSpeechRecognitionEnabled(false);
+  }
+
   const removeStoreData = async (key) => {
     try {
       await AsyncStorage.removeItem(key);
@@ -469,6 +501,8 @@ export default function App() {
 
     const delayDebounceFn = setTimeout(() => {
       if (value.trim().length > 0) {
+        stopVoiceInput();
+        
         const url =
           "https://unlimited-google-translate.p.rapidapi.com/translate";
         const options = {
@@ -795,28 +829,16 @@ export default function App() {
                 </View>
                 <View style={[styles.flexOptionsBlock]}>
                   {value.trim().length > 0 ? (
-                    <View style={[styles.translateGroupRight]}>
+                    isSpeechRecognitionEnabled? (
                       <View>
+                        <AnimatedWave
+                          sizeOvan={20}
+                          colorOvan={'#bebebe'}
+                          zoom={4}
+                          style={{position: "absolute", marginTop: 21, marginLeft: 17}}
+                        />
                         <TouchableOpacity
-                          style={[
-                            styles.speechButtonFilled,
-                            { opacity: 1, marginRight: 15 },
-                          ]}
-                          onPress={() => speak(value, inputLanguage[1])}
-                        >
-                          <Ionicons
-                            name="volume-high"
-                            size={25}
-                            color="white"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.translateGroupRight}>
-                      <View>
-                        <TouchableOpacity
-                          onPress={() => pasteFromClipBoard()}
+                          onPress={() => stopVoiceInput()}
                           style={[
                             styles.speechButtonFilled,
                             {
@@ -827,11 +849,99 @@ export default function App() {
                           ]}
                         >
                           <Ionicons
-                            name="copy-outline"
+                            name="mic-off-outline"
                             size={25}
                             color="white"
                           />
                         </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={[styles.translateGroupRight]}>
+                        <View>
+                          <TouchableOpacity
+                            style={[
+                              styles.speechButtonFilled,
+                              styles.speechWave,
+                              { opacity: 1, marginRight: 15 },
+                            ]}
+                            onPress={() => speak(value, inputLanguage[1])}
+                          >
+                            <Ionicons
+                              name="volume-high"
+                              size={25}
+                              color="white"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )
+                  ) : (
+                    <View style={[styles.translateGroupRight, styles.flexOptionsBlock]}>
+                      <View>
+                        <TouchableOpacity
+                          onPress={() => pasteFromClipBoard()}
+                          style={[
+                            styles.speechButtonFilled,
+                            {
+                              opacity: 1,
+                              marginRight: 15,
+                              backgroundColor: "#f3f3f3",
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name="copy-outline"
+                            size={25}
+                            color="#374CF4"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      <View>
+                        {isSpeechRecognitionEnabled? (
+                          <View>
+                            <AnimatedWave
+                              sizeOvan={20}
+                              colorOvan={'#bebebe'}
+                              zoom={4}
+                              style={{position: "absolute", marginTop: 21, marginLeft: 17}}
+                            />
+                            <TouchableOpacity
+                              onPress={() => stopVoiceInput()}
+                              style={[
+                                styles.speechButtonFilled,
+                                {
+                                  opacity: 1,
+                                  marginRight: 15,
+                                  backgroundColor: "#374CF4",
+                                },
+                              ]}
+                            >
+                              <Ionicons
+                                name="mic-off-outline"
+                                size={25}
+                                color="white"
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => startVoiceInput()}
+                            style={[
+                              styles.speechButtonFilled,
+                              {
+                                opacity: 1,
+                                marginRight: 15,
+                                backgroundColor: "#374CF4",
+                              },
+                            ]}
+                          >
+                            <Ionicons
+                              name="mic-outline"
+                              size={25}
+                              color="white"
+                            />
+                          </TouchableOpacity>
+                        )}
                       </View>
                     </View>
                   )}
