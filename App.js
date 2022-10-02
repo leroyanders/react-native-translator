@@ -13,7 +13,7 @@ import {
   Alert,
   Share,
   Platform,
-  Keyboard
+  Keyboard,
 } from "react-native";
 import * as Speech from "expo-speech";
 import * as Clipboard from "expo-clipboard";
@@ -287,7 +287,7 @@ const languages = [
   ["Yiddish", "yi"],
   ["Yoruba", "yo"],
   ["Zhuang", "za"],
-  ["Chinese", "zh"],
+  ["Chinese", "zh-TW"],
   ["Zulu", "zu"],
 ];
 
@@ -297,13 +297,20 @@ export default function App() {
   const [outputLanguage, onOutputLanguage] = React.useState(languages[38]);
   const [data, setData] = React.useState();
   const [loading, setLoading] = React.useState(false);
+
   const [modalVisible, setModalVisible] = React.useState(false);
   const [modalVisible2, setModalVisible2] = React.useState(false);
+
   const [search, onSearchTextChange] = React.useState("");
   const [error, setError] = React.useState(false);
   const [detected, setDetected] = React.useState(false);
   const inputTextArea = React.useRef(null);
+
   const [savedTranslations, setSavedTranslations] = React.useState([]);
+  const [savedToList, setSavedToList] = React.useState(false);
+  const [savedToListID, setSavedToListID] = React.useState(null);
+  const [savedListSearch, setSavedListSearch] = React.useState("");
+  const [savedListFilter, setSavedListFilter] = React.useState(false);
 
   const [rtlTextInput, setRTLTextInput] = React.useState({});
   const [rtlViewInput, setRTLViewInput] = React.useState({});
@@ -312,23 +319,23 @@ export default function App() {
   const [isKeyboardVisible, setKeyboardVisible] = React.useState(false);
 
   React.useEffect(() => {
-      const keyboardDidShowListener = Keyboard.addListener(
-          'keyboardDidShow',
-          () => {
-              setKeyboardVisible(true);
-          },
-      );
-      const keyboardDidHideListener = Keyboard.addListener(
-          'keyboardDidHide',
-          () => {
-              setKeyboardVisible(false);
-          },
-      );
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
 
-      return () => {
-          keyboardDidHideListener.remove();
-          keyboardDidShowListener.remove();
-      };
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
   }, []);
 
   const speak = (text, language) => {
@@ -372,7 +379,11 @@ export default function App() {
       if (outputArray) {
         outputArray.output = inputValue;
         onChangeText(
-          outputArray ? (Platform.OS === 'ios'? outputArray.output.replaceAll("(*n*)", "\n") : outputArray.output.replace('(*n*)', '\n')) : ""
+          outputArray
+            ? Platform.OS === "ios"
+              ? outputArray.output.replaceAll("(*n*)", "\n")
+              : outputArray.output.replace("(*n*)", "\n")
+            : ""
         );
         setData(outputArray);
       }
@@ -401,6 +412,15 @@ export default function App() {
     }
   };
 
+  const useTranslationFromPreset = (options) => {
+    const input = options.input;
+    const output = options.output;
+
+    onChangeText(input.text);
+    onInputLanguage(input.language);
+    onOutputLanguage(output.language);
+  }
+
   React.useEffect(() => {
     AsyncStorage.getAllKeys().then((keys) =>
       AsyncStorage.multiGet(keys).then((data) => {
@@ -415,10 +435,12 @@ export default function App() {
         return savedTranslations;
       })
     );
-  }, []);
+  }, [savedListFilter]);
 
   React.useEffect(() => {
     setLoading(true);
+    setSavedToList(false);
+    setSavedToListID(null);
 
     I18nManager.forceRTL(false);
     I18nManager.allowRTL(true);
@@ -459,7 +481,11 @@ export default function App() {
           },
           body: `{"lang":"${inputLanguage[1]}","dest":"${
             outputLanguage[1]
-          }","text":"${Platform.OS === 'ios'? value.replaceAll("\n", "(*n*)") : value.replace('\n', '(*n*)')}"}`,
+          }","text":"${
+            Platform.OS === "ios"
+              ? value.replaceAll("\n", "(*n*)")
+              : value.replace("\n", "(*n*)")
+          }"}`,
         };
         fetch(url, options)
           .then((res) => res.json())
@@ -473,6 +499,7 @@ export default function App() {
               );
 
               setDetected(true);
+
               languageInList && onInputLanguage(languageInList[0]);
             }
           })
@@ -555,7 +582,18 @@ export default function App() {
                   </View>
                 </View>
               </View>
-              <ScrollView style={!isKeyboardVisible? Platform.OS === 'ios'? { height: "80%" } : { height: "70%" } : { height: "50%" }}>
+
+              <ScrollView
+                style={
+                  !isKeyboardVisible
+                    ? Platform.OS === "ios"
+                      ? { height: "80%" }
+                      : { height: "70%" }
+                    : Platform.OS === "ios"
+                    ? { height: "80%" }
+                    : { height: "50%" }
+                }
+              >
                 {languages
                   .filter((item) => new RegExp(search).test(item[0]))
                   .map((language) => {
@@ -634,7 +672,17 @@ export default function App() {
                   />
                 </View>
               </View>
-              <ScrollView style={!isKeyboardVisible? Platform.OS === 'ios'? { height: "80%" } : { height: "70%" } : { height: "50%" }}>
+              <ScrollView
+                style={
+                  !isKeyboardVisible
+                    ? Platform.OS === "ios"
+                      ? { height: "80%" }
+                      : { height: "70%" }
+                    : Platform.OS === "ios"
+                    ? { height: "80%" }
+                    : { height: "50%" }
+                }
+              >
                 {languages
                   .filter((item) => new RegExp(search).test(item[0]))
                   .map((language) => {
@@ -678,7 +726,7 @@ export default function App() {
           </Modal>
 
           <View style={styles.textArea}>
-            <View style={styles.navTabs}>
+            <View style={[styles.navTabs]}>
               <TouchableOpacity
                 style={styles.languageButton}
                 onPress={() => setModalVisible(true)}
@@ -708,14 +756,6 @@ export default function App() {
             </View>
           </View>
           <View style={[styles.textAreaBlock, { flex: 1 }]}>
-            <Text
-              style={[
-                styles.translatedTextLabelWhite,
-                { color: "grey", opacity: 0.8 },
-              ]}
-            >
-              {inputLanguage[0]}
-            </Text>
             <TextInput
               ref={inputTextArea}
               multiline
@@ -745,7 +785,11 @@ export default function App() {
                       ]}
                     >
                       Pronunciation:{" "}
-                      {transliterate(Platform.OS === 'ios'? value.replaceAll("\n", " ↵ ") : value.replace('\n', ' ↵ '))}
+                      {transliterate(
+                        Platform.OS === "ios"
+                          ? value.replaceAll("\n", " ↵ ")
+                          : value.replace("\n", " ↵ ")
+                      )}
                     </Text>
                   )}
                 </View>
@@ -815,42 +859,73 @@ export default function App() {
                   <Text style={styles.translatedTextLabelWhite}>
                     {outputLanguage[0]}
                   </Text>
-                  {!loading && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        const options = {
-                          input: {
-                            language: inputLanguage,
-                            text: value,
-                          },
-                          output: {
-                            language: outputLanguage,
-                            text: Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"),
-                          },
-                        };
-                        storeData(
-                          new Date().getMilliseconds().toString(),
-                          options
-                        ).then(() => {
-                          AsyncStorage.getAllKeys().then((keys) =>
-                            AsyncStorage.multiGet(keys).then((data) => {
-                              var jsonData = [];
+                  {!loading &&
+                    (!savedToList ? (
+                      <TouchableOpacity
+                        onPress={(e) => {
+                          const key = new Date().getMilliseconds().toString();
 
-                              data.map((item) => {
-                                jsonData.push([item[0], JSON.parse(item[1])]);
-                              });
+                          setSavedToList(true);
+                          setSavedToListID(key);
 
-                              setSavedTranslations(jsonData);
-                              return savedTranslations;
-                            })
-                          );
-                        });
-                      }}
-                      style={[styles.starButton]}
-                    >
-                      <Ionicons name="cloud-upload" size={25} color="white" />
-                    </TouchableOpacity>
-                  )}
+                          const options = {
+                            input: {
+                              language: inputLanguage,
+                              text: value,
+                            },
+                            output: {
+                              language: outputLanguage,
+                              text:
+                                Platform.OS === "ios"
+                                  ? data.output.replaceAll("(*n*)", "\n")
+                                  : data.output.replace("(*n*)", "\n"),
+                            },
+                          };
+                          storeData(key, options).then(() => {
+                            AsyncStorage.getAllKeys().then((keys) =>
+                              AsyncStorage.multiGet(keys).then((data) => {
+                                var jsonData = [];
+
+                                data.map((item) => {
+                                  jsonData.push([item[0], JSON.parse(item[1])]);
+                                });
+
+                                setSavedTranslations(jsonData);
+                                return savedTranslations;
+                              })
+                            );
+                          });
+                        }}
+                        style={[styles.starButton]}
+                      >
+                        <Ionicons name="star-outline" size={25} color="white" />
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={(e) => {
+                          removeStoreData(savedToListID).then(() => {
+                            AsyncStorage.getAllKeys().then((keys) =>
+                              AsyncStorage.multiGet(keys).then((data) => {
+                                var jsonData = [];
+
+                                data.map((item) => {
+                                  jsonData.push([item[0], JSON.parse(item[1])]);
+                                });
+
+                                setSavedTranslations(jsonData);
+                                return savedTranslations;
+                              })
+                            );
+                          });
+
+                          setSavedToList(false);
+                          setSavedToListID(null);
+                        }}
+                        style={[styles.starButton]}
+                      >
+                        <Ionicons name="star" size={25} color="white" />
+                      </TouchableOpacity>
+                    ))}
                 </View>
                 <Text
                   style={[
@@ -862,7 +937,10 @@ export default function App() {
                 >
                   {loading
                     ? "Translation..."
-                    : data && (Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"))}
+                    : data &&
+                      (Platform.OS === "ios"
+                        ? data.output.replaceAll("(*n*)", "\n")
+                        : data.output.replace("(*n*)", "\n"))}
                 </Text>
                 {!loading && transliterate(value).trim().length > 0 && (
                   <Text
@@ -879,7 +957,11 @@ export default function App() {
                     ]}
                   >
                     Pronunciation:{" "}
-                    {transliterate(Platform.OS === 'ios'? data.output.replaceAll("(*n*)", " ↵ ") : data.output.replace("(*n*)", " ↵ "))}
+                    {transliterate(
+                      Platform.OS === "ios"
+                        ? data.output.replaceAll("(*n*)", " ↵ ")
+                        : data.output.replace("(*n*)", " ↵ ")
+                    )}
                   </Text>
                 )}
               </View>
@@ -895,7 +977,9 @@ export default function App() {
                     <TouchableOpacity
                       onPress={() =>
                         copyToClipboard(
-                          Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n")
+                          Platform.OS === "ios"
+                            ? data.output.replaceAll("(*n*)", "\n")
+                            : data.output.replace("(*n*)", "\n")
                         ).then(() => Alert.alert("Copied to clipboard."))
                       }
                       style={[
@@ -903,20 +987,28 @@ export default function App() {
                         { paddingLeft: 11, paddingRight: 11 },
                       ]}
                     >
-                      <Ionicons name="copy" size={20} color="white" />
+                      <Ionicons name="copy-outline" size={20} color="white" />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.translateGroupRight}>
                     <TouchableOpacity
                       onPress={() =>
-                        onShare(Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"))
+                        onShare(
+                          Platform.OS === "ios"
+                            ? data.output.replaceAll("(*n*)", "\n")
+                            : data.output.replace("(*n*)", "\n")
+                        )
                       }
                       style={[
                         styles.speechButton,
                         { paddingLeft: 11, paddingRight: 11 },
                       ]}
                     >
-                      <Ionicons name="share-social" size={20} color="white" />
+                      <Ionicons
+                        name="share-social-outline"
+                        size={20}
+                        color="white"
+                      />
                     </TouchableOpacity>
                   </View>
                   <View style={[styles.translateGroupRight]}>
@@ -924,12 +1016,18 @@ export default function App() {
                       style={[styles.speechButton]}
                       onPress={() =>
                         speak(
-                          Platform.OS === 'ios'? data.output.replaceAll("(*n*)", "\n") : data.output.replace("(*n*)", "\n"),
+                          Platform.OS === "ios"
+                            ? data.output.replaceAll("(*n*)", "\n")
+                            : data.output.replace("(*n*)", "\n"),
                           outputLanguage[1]
                         )
                       }
                     >
-                      <Ionicons name="volume-high" size={25} color="white" />
+                      <Ionicons
+                        name="volume-high-outline"
+                        size={25}
+                        color="white"
+                      />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -937,96 +1035,323 @@ export default function App() {
             </View>
           )}
           {savedTranslations.length > 0 && (
-            <View style={{ marginBottom: 50 }}>
+            <View
+              style={[
+                styles.savedTranslationsBox,
+                { marginBottom: 50, marginTop: 20 },
+              ]}
+            >
               <Text style={styles.savedTranslationsLabel}>
                 Saved translation:
               </Text>
-              {savedTranslations.reverse().map((item) => {
-                return (
-                  <View key={item[0]} style={styles.savedTranslations}>
-                    <View style={[styles.flexOptionsBlock]}>
-                      <View style={{ alignSelf: "center", width: "80%" }}>
-                        <Text
+              <View style={styles.savedSearchBox}>
+                <View
+                  style={[
+                    styles.flexOptionsBlockSpace,
+                    { alignItems: "center", flexWrap: "wrap" },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.flexOptionsBlockSpace,
+                      styles.flexFullWidth,
+                      { padding: 5, flex: 1 },
+                    ]}
+                  >
+                    <View style={{ alignItems: "baseline" }}>
+                      <Ionicons
+                        name="search-outline"
+                        size={20}
+                        color="#374CF4"
+                        style={{ padding: 15, paddingLeft: 15 }}
+                      />
+                    </View>
+                    <View
+                      style={{ lignSelf: "center", width: "100%", flex: 1 }}
+                    >
+                      <View>
+                        <TextInput
+                          placeholder="Search..."
+                          onChangeText={(t) => setSavedListSearch(t)}
+                          style={[styles.modalInput, { padding: 10 }]}
+                        />
+                      </View>
+                    </View>
+                    <View style={{}}>
+                      <View>
+                        <TouchableOpacity
+                          onPress={() => setSavedListFilter(!savedListFilter)}
                           style={[
-                            styles.savedTranslationsText,
+                            styles.speechButton,
                             {
-                              fontSize: 14,
-                              marginBottom: 10,
-                              fontWeight: "500",
+                              margin: 0,
+                              backgroundColor: "#f3f3f3",
+                              marginRight: 10,
+                              textAlign: "center",
                             },
                           ]}
                         >
-                          {item[1].input.language[0]} →{" "}
-                          {item[1].output.language[0]}
-                        </Text>
-                        <Text
-                          style={[
-                            { paddingLeft: 0, fontWeight: "500", fontSize: 16 },
-                          ]}
-                        >
-                          {item[1].input.text}
-                        </Text>
-                        <View>
-                          <Text
-                            style={[
-                              styles.savedTranslationsText,
-                              { fontSize: 14, marginTop: 10 },
-                            ]}
-                          >
-                            {item[1].output.text}
-                          </Text>
-                        </View>
-                      </View>
-                      <View
-                        style={[
-                          styles.flexOptionsBlock,
-                          { alignItems: "stretch" },
-                        ]}
-                      >
-                        <View style={styles.translateGroupRight}>
-                          <View>
-                            <TouchableOpacity
-                              style={[
-                                styles.speechButtonFilled,
-                                {
-                                  opacity: 1,
-                                  marginRight: 15,
-                                  backgroundColor: "#f3f3f3",
-                                },
-                              ]}
-                              onPress={() =>
-                                removeStoreData(item[0]).then(() => {
-                                  AsyncStorage.getAllKeys().then((keys) =>
-                                    AsyncStorage.multiGet(keys).then((data) => {
-                                      var jsonData = [];
-
-                                      data.map((item) => {
-                                        jsonData.push([
-                                          item[0],
-                                          JSON.parse(item[1]),
-                                        ]);
-                                      });
-
-                                      setSavedTranslations(jsonData);
-                                      return savedTranslations;
-                                    })
-                                  );
-                                })
-                              }
-                            >
-                              <Ionicons
-                                name="cloud-offline-outline"
-                                size={20}
-                                color="grey"
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+                          <Ionicons
+                            name="swap-vertical-outline"
+                            size={20}
+                            color={savedListFilter? "#374CF4" : "grey"}
+                          />
+                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>
-                );
-              })}
+                </View>
+              </View>
+              {!savedListFilter
+                ? savedTranslations
+                    .reverse()
+                    .filter((el) =>
+                      new RegExp(savedListSearch).test(JSON.stringify(el[1]))
+                    )
+                    .map((item) => {
+                      return (
+                        <View key={item[0]} style={styles.savedTranslations}>
+                          <View style={[styles.flexOptionsBlock]}>
+                            <View style={{ alignSelf: "center", width: "80%" }}>
+                              <Text
+                                style={[
+                                  styles.savedTranslationsText,
+                                  {
+                                    fontSize: 14,
+                                    marginBottom: 10,
+                                    fontWeight: "500",
+                                  },
+                                ]}
+                              >
+                                {item[1].input.language[0]} →{" "}
+                                {item[1].output.language[0]}
+                              </Text>
+                              <Text
+                                style={[
+                                  {
+                                    paddingLeft: 0,
+                                    fontWeight: "500",
+                                    fontSize: 16,
+                                  },
+                                ]}
+                              >
+                                {item[1].input.text}
+                              </Text>
+                              <View>
+                                <Text
+                                  style={[
+                                    styles.savedTranslationsText,
+                                    { fontSize: 14, marginTop: 10 },
+                                  ]}
+                                >
+                                  {item[1].output.text}
+                                </Text>
+                              </View>
+                            </View>
+                            <View>
+                              <View
+                                style={[
+                                  styles.flexOptionsBlock,
+                                  { alignItems: "flex-start" },
+                                ]}
+                              >
+                                <View style={{ marginLeft: 10 }}>
+                                  <View style={[styles.translateGroupRight]}>
+                                    <View>
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.speechButtonFilled,
+                                          {
+                                            opacity: 1,
+                                            marginRight: 15,
+                                            backgroundColor: "#f3f3f3",
+                                          },
+                                        ]}
+                                        onPress={() =>
+                                          removeStoreData(item[0]).then(() => {
+                                            AsyncStorage.getAllKeys().then(
+                                              (keys) =>
+                                                AsyncStorage.multiGet(
+                                                  keys
+                                                ).then((data) => {
+                                                  var jsonData = [];
+
+                                                  data.map((item) => {
+                                                    jsonData.push([
+                                                      item[0],
+                                                      JSON.parse(item[1]),
+                                                    ]);
+                                                  });
+
+                                                  setSavedTranslations(
+                                                    jsonData
+                                                  );
+                                                  return savedTranslations;
+                                                })
+                                            );
+                                          })
+                                        }
+                                      >
+                                        <Ionicons
+                                          name="star-outline"
+                                          size={20}
+                                          color="#374CF4"
+                                        />
+                                      </TouchableOpacity>
+                                    </View>
+                                  </View>
+                                  <View style={styles.translateGroupRight}>
+                                    <View>
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.speechButtonFilled,
+                                          {
+                                            opacity: 1,
+                                            marginRight: 15,
+                                            backgroundColor: "#f3f3f3",
+                                          },
+                                        ]}
+                                        onPress={() => useTranslationFromPreset(item[1])}
+                                      >
+                                        <Ionicons
+                                          name="open-outline"
+                                          size={20}
+                                          color="grey"
+                                        />
+                                      </TouchableOpacity>
+                                    </View>
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })
+                : savedTranslations
+                    .filter((el) =>
+                      new RegExp(savedListSearch).test(JSON.stringify(el[1]))
+                    )
+                    .map((item) => {
+                      return (
+                        <View key={item[0]} style={styles.savedTranslations}>
+                          <View style={[styles.flexOptionsBlock]}>
+                            <View style={{ alignSelf: "center", width: "80%" }}>
+                              <Text
+                                style={[
+                                  styles.savedTranslationsText,
+                                  {
+                                    fontSize: 14,
+                                    marginBottom: 10,
+                                    fontWeight: "500",
+                                  },
+                                ]}
+                              >
+                                {item[1].input.language[0]} →{" "}
+                                {item[1].output.language[0]}
+                              </Text>
+                              <Text
+                                style={[
+                                  {
+                                    paddingLeft: 0,
+                                    fontWeight: "500",
+                                    fontSize: 16,
+                                  },
+                                ]}
+                              >
+                                {item[1].input.text}
+                              </Text>
+                              <View>
+                                <Text
+                                  style={[
+                                    styles.savedTranslationsText,
+                                    { fontSize: 14, marginTop: 10 },
+                                  ]}
+                                >
+                                  {item[1].output.text}
+                                </Text>
+                              </View>
+                            </View>
+                            <View>
+                              <View
+                                style={[
+                                  styles.flexOptionsBlock,
+                                  { alignItems: "flex-start" },
+                                ]}
+                              >
+                                <View style={{ marginLeft: 10 }}>
+                                  <View style={[styles.translateGroupRight]}>
+                                    <View>
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.speechButtonFilled,
+                                          {
+                                            opacity: 1,
+                                            marginRight: 15,
+                                            backgroundColor: "#f3f3f3",
+                                          },
+                                        ]}
+                                        onPress={() =>
+                                          removeStoreData(item[0]).then(() => {
+                                            AsyncStorage.getAllKeys().then(
+                                              (keys) =>
+                                                AsyncStorage.multiGet(
+                                                  keys
+                                                ).then((data) => {
+                                                  var jsonData = [];
+
+                                                  data.map((item) => {
+                                                    jsonData.push([
+                                                      item[0],
+                                                      JSON.parse(item[1]),
+                                                    ]);
+                                                  });
+
+                                                  setSavedTranslations(
+                                                    jsonData
+                                                  );
+                                                  return savedTranslations;
+                                                })
+                                            );
+                                          })
+                                        }
+                                      >
+                                        <Ionicons
+                                          name="star-outline"
+                                          size={20}
+                                          color="#374CF4"
+                                        />
+                                      </TouchableOpacity>
+                                    </View>
+                                  </View>
+                                  <View style={styles.translateGroupRight}>
+                                    <View>
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.speechButtonFilled,
+                                          {
+                                            opacity: 1,
+                                            marginRight: 15,
+                                            backgroundColor: "#f3f3f3",
+                                          },
+                                        ]}
+                                        onPress={() => useTranslationFromPreset(item[1])}
+                                      >
+                                        <Ionicons
+                                          name="open-outline"
+                                          size={20}
+                                          color="grey"
+                                        />
+                                      </TouchableOpacity>
+                                    </View>
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
             </View>
           )}
         </ScrollView>
@@ -1072,7 +1397,7 @@ const styles = StyleSheet.create({
     padding: 15,
     justifyContent: "space-around",
     backgroundColor: "white",
-    paddingTop: 20,
+    paddingTop: 30,
   },
   replaceButton: {
     padding: 5,
@@ -1164,10 +1489,10 @@ const styles = StyleSheet.create({
   },
   translatedBlock: {
     backgroundColor: "#374CF4",
-    shadowColor: Platform.OS === 'ios'? "#000" : "transparent",
+    shadowColor: Platform.OS === "ios" ? "#000" : "transparent",
     shadowOffset: {
       width: 0,
-      height: 5,
+      height: 1,
     },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
@@ -1192,7 +1517,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 0,
-    marginTop: Platform.OS === 'ios'? 75 : 0,
+    marginTop: Platform.OS === "ios" ? 75 : 0,
     backgroundColor: "white",
     borderRadius: 20,
     height: "90%",
@@ -1220,14 +1545,14 @@ const styles = StyleSheet.create({
     marginTop: 0,
     borderTopWidth: 0,
     padding: 15,
-    borderBottomLeftRadius: Platform.OS === 'ios'? 30 : 0,
-    borderBottomRightRadius: Platform.OS === 'ios'? 30 : 0,
-    shadowColor: Platform.OS === 'ios'? "#000" : "transparent",
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    shadowColor: Platform.OS === "ios" ? "#000" : "transparent",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 2.1,
+    shadowOpacity: 0.1,
     shadowRadius: 1.41,
 
     elevation: 1,
@@ -1259,7 +1584,8 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     margin: 15,
-    padding: 15,
+    padding: 20,
+    paddingLeft: 15,
     paddingRight: 0,
     marginBottom: 0,
     shadowColor: "#000",
@@ -1274,7 +1600,7 @@ const styles = StyleSheet.create({
   },
   savedTranslationsText: {
     color: "grey",
-    borderTopWidth: Platform.OS === 'ios'? 1 : 0,
+    borderTopWidth: Platform.OS === "ios" ? 1 : 0,
     borderTopColor: "#e5e5e5",
   },
   savedTranslationsLabel: {
@@ -1282,5 +1608,26 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     fontWeight: "500",
     fontSize: 16,
+    opacity: 0.8,
+  },
+  savedSearchBox: {
+    backgroundColor: "white",
+    margin: 15,
+    marginBottom: 0,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 1.41,
+
+    elevation: 2,
+    borderRadius: 10,
+  },
+  textArea: {
+    paddingTop: 400,
+    backgroundColor: "white",
+    marginTop: -400,
   },
 });
