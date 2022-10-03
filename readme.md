@@ -14,6 +14,7 @@ Translator app with more than 7K supported languages, supports voiceover of the 
 2. Supporting RTL for Arabic, Hebrew and etc.
 3. Text-to-speech plugin.
 4. Save translations for future use.
+5. Voice input.
 
 ### Instruction to install
 **Clone repository**
