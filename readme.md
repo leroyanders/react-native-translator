@@ -7,7 +7,7 @@ Translator app with more than 7K supported languages, supports voiceover of the 
 
 **No limits. Save translates for future. Be smart.**
 
-<img align="right" width="300px" src="https://user-images.githubusercontent.com/106757584/193470717-991dcaaa-b9f2-4ecb-b0d1-e2fef4f1c4b1.png"/>
+<img width="300px" src="https://user-images.githubusercontent.com/106757584/193470717-991dcaaa-b9f2-4ecb-b0d1-e2fef4f1c4b1.png"/>
 
 ### Feautures
 1. Translate in all ```7.5K``` languages.
@@ -38,9 +38,5 @@ expo run:ios
 ```
 expo run:android
 ```
-
-<br/>
-<br/>
-<br/>
 
 Made with ❤️ by Leroy Wagner
