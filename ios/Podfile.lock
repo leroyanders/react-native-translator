@@ -322,8 +322,6 @@ PODS:
   - React-jsinspector (0.69.6)
   - React-logger (0.69.6):
     - glog
-  - react-native-animated-wave (1.2.3):
-    - React
   - react-native-voice (3.2.4):
     - React-Core
   - react-native-webview (11.23.0):
@@ -440,7 +438,6 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
-  - react-native-animated-wave (from `../node_modules/react-native-animated-wave`)
   - "react-native-voice (from `../node_modules/@react-native-voice/voice`)"
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -540,8 +537,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
-  react-native-animated-wave:
-    :path: "../node_modules/react-native-animated-wave"
   react-native-voice:
     :path: "../node_modules/@react-native-voice/voice"
   react-native-webview:
@@ -617,7 +612,6 @@ SPEC CHECKSUMS:
   React-jsiexecutor: c61b60de03b3474e5749b8a8fd8e6507630d62c4
   React-jsinspector: eaacb698c5af7a99131bc1933806372c20222dfd
   React-logger: ebb4d31bbbe4f1a8a1a9b658d7429210b8f68160
-  react-native-animated-wave: faae1a54a1064a3369adb83a37ce67d6c34dac3a
   react-native-voice: f5e8eec2278451d0017eb6a30a6ccc726aca34e0
   react-native-webview: e771bc375f789ebfa02a26939a57dbc6fa897336
   React-perflogger: 1fb1ad5333b43a5137afd7608695f7a42c5efd27

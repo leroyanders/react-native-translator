@@ -1,8 +1,7 @@
-import Voice from '@react-native-voice/voice';
+import Voice from "@react-native-voice/voice";
 import React from "react";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AnimatedWave from "react-native-animated-wave";
 
 import { Appbar } from "react-native-paper";
 import {
@@ -17,7 +16,7 @@ import {
   Alert,
   Share,
   Platform,
-  Keyboard
+  Keyboard,
 } from "react-native";
 import * as Speech from "expo-speech";
 import * as Clipboard from "expo-clipboard";
@@ -321,7 +320,8 @@ export default function App() {
   const [rtlTextOutput, setRTLTextOutput] = React.useState({});
   const [rtlViewOutput, setRTLViewOutput] = React.useState({});
   const [isKeyboardVisible, setKeyboardVisible] = React.useState(false);
-  const [isSpeechRecognitionEnabled, setSpeechRecognitionEnabled] = React.useState(false);
+  const [isSpeechRecognitionEnabled, setSpeechRecognitionEnabled] =
+    React.useState(false);
 
   React.useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -410,31 +410,30 @@ export default function App() {
   };
 
   const startVoiceInput = () => {
-
     const speechStart = () => {
-      setSpeechRecognitionEnabled(true); 
-    }
+      setSpeechRecognitionEnabled(true);
+    };
 
     const speechEnd = () => {
-      setSpeechRecognitionEnabled(false); 
-    }
+      setSpeechRecognitionEnabled(false);
+    };
 
     const getVoiceResponse = (res) => {
-      onChangeText(res?.value && res?.value.join(' '));
-    }
+      onChangeText(res?.value && res?.value.join(" "));
+    };
 
     Voice.onSpeechStart = speechStart;
     Voice.onSpeechEnd = speechEnd;
-    Voice.onSpeechResults = getVoiceResponse
+    Voice.onSpeechResults = getVoiceResponse;
 
     // start listening for voice
-    Voice.start(inputLanguage[1] === 'auto'? 'en' : inputLanguage[1]);
-  }
+    Voice.start(inputLanguage[1] === "auto" ? "en" : inputLanguage[1]);
+  };
 
   const stopVoiceInput = () => {
     Voice.stop();
     setSpeechRecognitionEnabled(false);
-  }
+  };
 
   const removeStoreData = async (key) => {
     try {
@@ -451,7 +450,7 @@ export default function App() {
     onChangeText(input.text);
     onInputLanguage(input.language);
     onOutputLanguage(output.language);
-  }
+  };
 
   React.useEffect(() => {
     AsyncStorage.getAllKeys().then((keys) =>
@@ -502,9 +501,9 @@ export default function App() {
     const delayDebounceFn = setTimeout(() => {
       if (value.trim().length > 0) {
         stopVoiceInput();
-        
+
         const url =
-          "https://unlimited-google-translate.p.rapidapi.com/translate";
+          "https://rapid-google-translate-git-master-leroywagner.vercel.app/translate";
         const options = {
           method: "POST",
           headers: {
@@ -829,14 +828,8 @@ export default function App() {
                 </View>
                 <View style={[styles.flexOptionsBlock]}>
                   {value.trim().length > 0 ? (
-                    isSpeechRecognitionEnabled? (
+                    isSpeechRecognitionEnabled ? (
                       <View>
-                        <AnimatedWave
-                          sizeOvan={20}
-                          colorOvan={'#bebebe'}
-                          zoom={4}
-                          style={{position: "absolute", marginTop: 21, marginLeft: 17}}
-                        />
                         <TouchableOpacity
                           onPress={() => stopVoiceInput()}
                           style={[
@@ -876,7 +869,12 @@ export default function App() {
                       </View>
                     )
                   ) : (
-                    <View style={[styles.translateGroupRight, styles.flexOptionsBlock]}>
+                    <View
+                      style={[
+                        styles.translateGroupRight,
+                        styles.flexOptionsBlock,
+                      ]}
+                    >
                       <View>
                         <TouchableOpacity
                           onPress={() => pasteFromClipBoard()}
@@ -897,14 +895,8 @@ export default function App() {
                         </TouchableOpacity>
                       </View>
                       <View>
-                        {isSpeechRecognitionEnabled? (
+                        {isSpeechRecognitionEnabled ? (
                           <View>
-                            <AnimatedWave
-                              sizeOvan={20}
-                              colorOvan={'#bebebe'}
-                              zoom={4}
-                              style={{position: "absolute", marginTop: 21, marginLeft: 17}}
-                            />
                             <TouchableOpacity
                               onPress={() => stopVoiceInput()}
                               style={[
@@ -925,7 +917,7 @@ export default function App() {
                           </View>
                         ) : (
                           <TouchableOpacity
-                            onPress={() => startVoiceInput()}
+                            onLongPress={() => startVoiceInput()}
                             style={[
                               styles.speechButtonFilled,
                               {
@@ -1204,7 +1196,7 @@ export default function App() {
                           <Ionicons
                             name="swap-vertical-outline"
                             size={20}
-                            color={savedListFilter? "#374CF4" : "grey"}
+                            color={savedListFilter ? "#374CF4" : "grey"}
                           />
                         </TouchableOpacity>
                       </View>
@@ -1321,7 +1313,9 @@ export default function App() {
                                             backgroundColor: "#f3f3f3",
                                           },
                                         ]}
-                                        onPress={() => useTranslationFromPreset(item[1])}
+                                        onPress={() =>
+                                          useTranslationFromPreset(item[1])
+                                        }
                                       >
                                         <Ionicons
                                           name="open-outline"
@@ -1445,7 +1439,9 @@ export default function App() {
                                             backgroundColor: "#f3f3f3",
                                           },
                                         ]}
-                                        onPress={() => useTranslationFromPreset(item[1])}
+                                        onPress={() =>
+                                          useTranslationFromPreset(item[1])
+                                        }
                                       >
                                         <Ionicons
                                           name="open-outline"
