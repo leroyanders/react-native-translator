@@ -39,4 +39,4 @@ expo run:ios
 expo run:android
 ```
 
-Made with ❤️ by Leroy Wagner
+Made with ❤️ by Leroy Anders
